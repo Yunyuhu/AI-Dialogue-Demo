@@ -1,6 +1,6 @@
 # 對話與文字處理 Demo
 
-[直接開啟公開 Demo](https://yunyuhu.github.io/AI-Dialogue-Demo)
+[直接開啟公開 Demo](https://yunyuhu.github.io/AI-Dialogue-Demo/)
 
 由 [2024 多輪對話](https://github.com/Yunyuhu/AI-Practice-2024/blob/main/course/week11_chatgpt_chatbot.ipynb)與 [OpenAI API 文字處理](https://github.com/Yunyuhu/AI-Practice-2024/blob/main/practice/openai_api_basics.ipynb)練習延伸的互動展示。
 
@@ -14,7 +14,7 @@
 
 原始版本以 Python、OpenAI SDK 與 Gradio 實作。網頁整理版以 JavaScript Worker 提供伺服器端 API，讓訪客無須開啟 Notebook、安裝套件或提供金鑰。原始 Notebook 保留於原 repo。
 
-這次新增獨立訪客狀態、請求取消、訊息角色驗證、輸入長度限制及同源檢查。所有模型輸出以純文字呈現，避免執行生成的 HTML。對話紀錄只存在當前瀏覽器頁面，API 使用 `store: false`，沒有建置對話資料庫。
+這次新增獨立訪客狀態、請求取消、訊息角色驗證、輸入長度限制及來源白名單檢查。所有模型輸出以純文字呈現，避免執行生成的 HTML。對話紀錄只存在當前瀏覽器頁面，API 使用 `store: false`，沒有建置對話資料庫。
 
 ## 程式結構
 
@@ -23,6 +23,14 @@
 - `runtime.mjs`：輸入限制、API 呼叫、錯誤處理與靜態檔案回應。
 - `build.mjs`：將來源打包成可部署的單一 Worker ESM。
 - `dev.mjs`：本機 HTTP 轉接器，使用同一份 Worker 行為。
+
+## 部署方式
+
+展示介面由 GitHub Pages 發布，後端由 Vercel Functions 執行。前端只保存公開 API 網址；API 金鑰保存在後端秘密環境變數。`DEMO_ALLOWED_ORIGIN` 限定為 `https://yunyuhu.github.io`。CORS 限制瀏覽器跨來源操作，無法取代身分驗證或全域費用上限。
+
+- `.github/workflows/pages.yml`：發布 `public/`。
+- `api/index.mjs`：處理 API 路由、來源驗證與預檢請求。
+- `vercel.json`：指定 API 路由與執行期限。
 
 ## 本機執行
 
@@ -39,7 +47,7 @@ DEMO_ENV_FILE=/absolute/path/to/.env.local PORT=8766 node dev.mjs
 
 ## 驗證
 
-已實際呼叫 API，確認下一輪能回答前輪提到的「不想看恐怖片」偏好，並確認關鍵字與整理結果都能取得。另檢查跨來源 POST、錯誤輸入與文字輸出處理。
+已實際呼叫 API，確認下一輪能回答前輪提到的「不想看恐怖片」偏好，並確認關鍵字與整理結果都能取得。另檢查非白名單來源 POST、錯誤輸入與文字輸出處理。
 
 ## 限制
 
@@ -47,7 +55,6 @@ DEMO_ENV_FILE=/absolute/path/to/.env.local PORT=8766 node dev.mjs
 - 對話最多八輪，原文整理最多 4,000 字。
 - 單一 Worker 執行個體內設有每 IP 每分鐘八次的限制，這不構成分散式全域費用上限。
 - AI 輸入會送至 OpenAI 處理；本展示不保存內容。
-- 目前部署使用的金鑰有效期限為 24 小時，長期公開前需更換為適合的金鑰並重新驗證。
 
 ## 官方文件
 
