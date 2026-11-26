@@ -2,7 +2,7 @@
 
 [直接開啟公開 Demo](https://yunyuhu.github.io/AI-Dialogue-Demo/)
 
-展示介面已上線；即時服務待後端設定完成，目前會顯示服務設定中。
+已由 GitHub Pages 提供介面，並連接正式 Vercel API，支援即時對話與兩階段文字整理。
 
 由 [2024 多輪對話](https://github.com/Yunyuhu/AI-Practice-2024/blob/main/course/week11_chatgpt_chatbot.ipynb)與 [OpenAI API 文字處理](https://github.com/Yunyuhu/AI-Practice-2024/blob/main/practice/openai_api_basics.ipynb)練習延伸的互動展示。
 
