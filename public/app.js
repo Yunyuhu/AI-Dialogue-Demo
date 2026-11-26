@@ -1,5 +1,7 @@
 // 公開頁面與 API 分開部署；本機未指定時沿用同源路徑。
-const API_BASE = document.querySelector('meta[name="api-base"]')?.content || '';
+const API_BASE = (document.querySelector('meta[name="api-base"]')?.content || '').replace(/\/+$/, '');
+// Pages 尚未接妥後端時停止請求，避免把靜態站的錯誤頁當成 API 回應。
+const API_READY = Boolean(API_BASE) || !location.hostname.endsWith('github.io');
 /* 對話狀態僅存於當前頁面；重設與切換角色會取消請求並清除歷史。 */
 const $ = id => document.getElementById(id);
 let history = [], chatController, processController;
@@ -25,6 +27,7 @@ function resetChat() {
   status('chat-status', '可以連續追問，最多八輪。');
 }
 async function sendChat() {
+  if (!API_READY) return status('chat-status', '即時回覆服務設定中，請稍後再試。');
   const message = $('chat-input').value.trim();
   if (!message) return status('chat-status', '請先輸入訊息。', true);
   if (history.length >= 16) return status('chat-status', '已達八輪展示長度，請開始新的對話。', true);
@@ -45,6 +48,7 @@ function resetProcess() {
   status('process-status', '最多 4,000 字；將依序進行兩次 AI 處理。');
 }
 async function processText() {
+  if (!API_READY) return status('process-status', '即時回覆服務設定中，請稍後再試。');
   const input = $('process-input').value.trim(); if (!input) return status('process-status', '請先貼上文字。', true);
   const current = new AbortController(); processController = current; $('process-send').disabled = true;
   $('keywords').textContent = '正在擷取關鍵字…'; $('summary').textContent = '等待第一階段完成。'; status('process-status', '正在依序處理，請稍候。');
@@ -68,3 +72,9 @@ $('chat-send').addEventListener('click', sendChat); $('chat-clear').addEventList
 $('process-send').addEventListener('click', processText); $('process-clear').addEventListener('click', resetProcess);
 $('chat-example').addEventListener('click', () => { $('role').value = 'movie'; resetChat(); $('chat-input').value = '我想看節奏慢、關於家庭關係的電影，可以推薦兩部並說明理由嗎？'; });
 $('process-example').addEventListener('click', () => { $('process-input').value = '我們這次訪談五位學生，發現大家常在三個不同頁面之間查詢課程資訊。有兩位表示找不到退選日期，另外三位希望先看到衝堂提醒。團隊決定先整理課程資訊架構，再用互動原型測試選課與退選流程。下次會議要確認測試任務與招募方式。'; });
+
+if (!API_READY) {
+  $('chat-send').disabled = true; $('process-send').disabled = true;
+  status('chat-status', '即時回覆服務設定中，請稍後再試。');
+  status('process-status', '即時回覆服務設定中，請稍後再試。');
+}
