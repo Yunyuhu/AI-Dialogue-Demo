@@ -26,6 +26,9 @@
 
 ## 部署方式
 
+[後端部署步驟與環境變數](DEPLOYMENT.md)
+
+
 展示介面由 GitHub Pages 發布，後端由 Vercel Functions 執行。前端只保存公開 API 網址；API 金鑰保存在後端秘密環境變數。`DEMO_ALLOWED_ORIGIN` 限定為 `https://yunyuhu.github.io`。CORS 限制瀏覽器跨來源操作，無法取代身分驗證或全域費用上限。
 
 - `.github/workflows/pages.yml`：發布 `public/`。
