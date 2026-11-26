@@ -1,11 +1,97 @@
 <!doctype html>
 <html lang="zh-Hant"><head><meta charset="utf-8">
-  <!-- 公開 API 網址與頁面分開部署；此欄僅保存網址，金鑰由後端讀取。 -->
-  <meta name="api-base" content="https://ai-dialogue-demo.vercel.app"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="胡芸毓的對話與文字處理實作。體驗角色設定、多輪對話與兩階段提示流程。"><title>對話與文字處理｜胡芸毓</title><link rel="stylesheet" href="style.css"></head><body>
-<!-- 將兩類實作分成獨立操作頁籤，共用安全的伺服器端 API。 -->
-<header><a href="https://yunyu-web-digital-profile.vercel.app">胡芸毓 <span>Yunyu Hu</span></a><a href="https://github.com/Yunyuhu/AI-Practice-2024">原始實作</a></header>
-<main><section class="intro"><p class="eyebrow">AI 應用實作 · 對話與提示流程</p><h1>讓一段輸入，<br>接上清楚的處理流程。</h1><p>試試延續上下文的角色對話，或查看文字從關鍵字擷取到整理成文的過程。</p></section>
-<div class="tabs" role="tablist" aria-label="選擇實作"><button role="tab" id="chat-tab" aria-selected="true" aria-controls="chat-view">多輪角色對話</button><button role="tab" id="process-tab" aria-selected="false" aria-controls="process-view" tabindex="-1">分階段文字整理</button></div>
-<section id="chat-view" role="tabpanel" aria-labelledby="chat-tab" class="layout"><div class="panel"><h2>帶著上下文，接著聊下去</h2><label for="role">選擇角色</label><select id="role"><option value="movie">電影推薦助手</option><option value="writing">文字整理助手</option></select><p class="small">切換角色會開始新的對話。</p><label for="chat-input">你的訊息</label><textarea id="chat-input" maxlength="1500" placeholder="例如：我想看節奏慢、關於家庭關係的電影。"></textarea><div><button class="example" id="chat-example">填入電影推薦範例</button></div><div class="actions"><button id="chat-send" class="primary">送出訊息</button><button id="chat-clear">開始新對話</button></div><p id="chat-status" class="status" role="status">可以連續追問，最多八輪。</p></div><div class="panel"><h2>對話紀錄</h2><div id="history" class="history" role="log" aria-live="polite"><p class="empty">送出第一則訊息，看看助手如何回應。</p></div></div></section>
-<section id="process-view" role="tabpanel" aria-labelledby="process-tab" class="layout" hidden><div class="panel"><h2>從原文整理出重點</h2><label for="process-input">貼上一段文字</label><textarea id="process-input" maxlength="4000" rows="9" placeholder="貼上活動紀錄、專案筆記或一段想整理的文字。"></textarea><button id="process-example" class="example">填入專案筆記範例</button><div class="actions"><button id="process-send" class="primary">整理文字</button><button id="process-clear">清除</button></div><p id="process-status" class="status" role="status">最多 4,000 字；將依序進行兩次 AI 處理。</p></div><div class="panel" aria-live="polite"><div class="stage"><h2>第一階段 · 關鍵字擷取</h2><div id="keywords" class="result small">關鍵字會顯示在這裡。</div></div><div class="stage"><h2>第二階段 · 整理成文</h2><div id="summary" class="result">整理結果會顯示在這裡。</div></div></div></section>
-<section class="about"><h2>這份展示整理了哪些實作？</h2><p>由 2024 年的 OpenAI API 與 Gradio 練習延伸，保留角色提示、多輪訊息與兩階段文字處理的核心。2026 網頁版將介面與伺服器分開，補上對話隔離、清除、輸入驗證及錯誤提示。</p><p class="small">本展示不保存對話紀錄。送出的文字會由 OpenAI API 處理，請使用適合公開展示的範例內容。生成結果可能有誤，使用前請核對。</p></section></main><footer><span>胡芸毓的 AI 實作整理</span><a href="https://github.com/Yunyuhu/AI-Practice-2024/blob/main/course/week11_chatgpt_chatbot.ipynb">多輪對話來源</a><a href="https://github.com/Yunyuhu/AI-Practice-2024/blob/main/practice/openai_api_basics.ipynb">文字處理來源</a></footer><script src="app.js"></script></body></html>
+<!-- 後端 API 網址；此欄不可填入金鑰。本機測試時清空即使用同源 API。 -->
+<meta name="api-base" content="https://ai-dialogue-demo.vercel.app">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="跟會記得上下文的 AI 角色聊天，或把一段筆記交給它，先抓關鍵字再整理成文。">
+<meta name="theme-color" content="#2b2140">
+<title>聊聊｜會記得上下文的 AI 對話</title>
+<link rel="stylesheet" href="style.css">
+</head><body>
+<div class="app">
+  <aside class="side" aria-label="對話清單">
+    <div class="side-head"><span class="logo">聊聊</span><span class="tagline">會記得上下文的 AI 對話</span></div>
+    <nav class="threads" role="tablist" aria-label="選擇對話">
+      <button class="thread" role="tab" data-mode="movie" aria-selected="true">
+        <span class="avatar a-movie" aria-hidden="true">影</span>
+        <span class="t-text"><b>小影</b><small>電影推薦，會追問你的口味</small></span>
+      </button>
+      <button class="thread" role="tab" data-mode="writing" aria-selected="false">
+        <span class="avatar a-writing" aria-hidden="true">文</span>
+        <span class="t-text"><b>小文</b><small>幫你把句子改通順</small></span>
+      </button>
+      <button class="thread" role="tab" data-mode="process" aria-selected="false">
+        <span class="avatar a-process" aria-hidden="true">要</span>
+        <span class="t-text"><b>重點整理</b><small>先抓關鍵字，再寫成短文</small></span>
+      </button>
+    </nav>
+    <p class="side-note">對話只存在這個分頁，重新整理就會消失。</p>
+    <a class="credit" href="https://yunyu-web-digital-profile.vercel.app">© 2026 Yunyu Hu</a>
+  </aside>
+
+  <main class="main">
+    <!-- 角色對話 -->
+    <section id="chat-view" class="chat" aria-label="對話">
+      <header class="chat-head">
+        <span class="avatar big" id="head-avatar" aria-hidden="true">影</span>
+        <div class="who"><h1 id="head-name">小影</h1><p id="head-desc">電影推薦助手</p></div>
+        <div class="rounds" title="這段對話最多 8 輪">
+          <svg viewBox="0 0 36 36" aria-hidden="true"><circle class="ring-bg" cx="18" cy="18" r="15"/><circle class="ring" id="ring" cx="18" cy="18" r="15"/></svg>
+          <span id="round-text">0/8</span>
+        </div>
+        <button class="icon-btn" id="chat-clear" type="button" title="開始新對話" aria-label="開始新對話"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+      </header>
+      <div class="history" id="history" role="log" aria-live="polite"></div>
+      <div class="suggest" id="suggest" aria-label="建議的訊息"></div>
+      <form class="composer" id="chat-form">
+        <label class="sr" for="chat-input">輸入訊息</label>
+        <textarea id="chat-input" rows="1" maxlength="1500" placeholder="輸入訊息（Enter 送出）"></textarea>
+        <button id="chat-send" class="send" type="submit" aria-label="送出"><svg viewBox="0 0 24 24"><path d="M4 12l16-8-6 16-2.5-6.5L4 12z"/></svg></button>
+      </form>
+      <p class="status" id="chat-status" role="status"></p>
+    </section>
+
+    <!-- 兩步驟重點整理 -->
+    <section id="process-view" class="process" aria-label="重點整理" hidden>
+      <header class="chat-head">
+        <span class="avatar big a-process" aria-hidden="true">要</span>
+        <div class="who"><h1>重點整理</h1><p>貼一段筆記，AI 先抓關鍵字，再依關鍵字寫成短文</p></div>
+      </header>
+      <div class="board">
+        <div class="step-card source">
+          <div class="step-title"><span class="num">原文</span><button class="link" id="process-example" type="button">填入範例</button></div>
+          <label class="sr" for="process-input">貼上要整理的文字</label>
+          <textarea id="process-input" maxlength="4000" rows="10" placeholder="貼上會議紀錄、訪談筆記，或任何想整理的文字（最多 4,000 字）"></textarea>
+          <div class="row"><span class="count" id="count">0 / 4,000 字</span><button id="process-clear" class="ghost" type="button">清除</button><button id="process-send" class="primary" type="button">開始整理</button></div>
+          <p class="status" id="process-status" role="status"></p>
+        </div>
+        <div class="pipeline" aria-live="polite">
+          <div class="step-card" id="step-1" data-state="idle">
+            <div class="step-title"><span class="num">1</span>抓出關鍵字</div>
+            <div class="chips" id="keywords"><span class="placeholder">關鍵字會一個一個出現在這裡</span></div>
+          </div>
+          <div class="step-card" id="step-2" data-state="idle">
+            <div class="step-title"><span class="num">2</span>依關鍵字寫成短文</div>
+            <article class="summary" id="summary"><span class="placeholder">整理好的短文會出現在這裡</span></article>
+            <div class="ratio" id="ratio" hidden>
+              <div class="ratio-bar"><span class="ratio-orig"></span><span class="ratio-new" id="ratio-new"></span></div>
+              <p id="ratio-text"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <details class="about">
+      <summary>關於這個作品</summary>
+      <div class="about-body">
+        <p><b>多輪對話：</b>每次送出時，把整段對話紀錄一起交給 OpenAI API，所以角色記得你前面說過什麼。角色的設定寫在伺服器上，訪客不能改寫。</p>
+        <p><b>重點整理：</b>分成兩次呼叫：第一次只抓關鍵字，第二次把原文和關鍵字一起交給模型寫成短文，讓中間結果看得見。</p>
+        <p>前端放在 GitHub Pages，API 部署在 Vercel，金鑰只存在伺服器，並限制每分鐘的使用次數。本站不保存對話；生成內容可能有誤，請自行核對。</p>
+        <p class="links"><a href="https://github.com/Yunyuhu/AI-Dialogue-Demo">原始碼</a><a href="https://yunyu-web-digital-profile.vercel.app">作者作品集</a></p>
+      </div>
+    </details>
+  </main>
+</div>
+<script src="app.js"></script>
+</body></html>
