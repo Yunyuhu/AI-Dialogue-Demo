@@ -1,11 +1,13 @@
+// 公開頁面與 API 分開部署；本機未指定時沿用同源路徑。
+const API_BASE = document.querySelector('meta[name="api-base"]')?.content || '';
 /* 對話狀態僅存於當前頁面；重設與切換角色會取消請求並清除歷史。 */
 const $ = id => document.getElementById(id);
 let history = [], chatController, processController;
 
 function status(id, value, error = false) { $(id).textContent = value; $(id).classList.toggle('error', error); }
 async function post(path, body, signal) {
-  const response = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal });
-  const data = await response.json(); if (!response.ok) throw Error(data.error || '暫時無法取得回覆。'); return data;
+  const response = await fetch(API_BASE + path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal });
+  let data; try { data = await response.json(); } catch { throw Error('暫時無法連上回覆服務，請稍後再試。'); } if (!response.ok) throw Error(data.error || '暫時無法取得回覆。'); return data;
 }
 function render() {
   $('history').replaceChildren();
