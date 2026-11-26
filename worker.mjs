@@ -12,7 +12,7 @@ export default {
     if (request.method === 'GET') return path === '/api/health' ? json({ ready: Boolean(env.OPENAI_API_KEY || env.OPENAI_API_KEY_ENCRYPTED) }) : asset(path, ASSETS);
     if (request.method !== 'POST' || !['/api/chat', '/api/process'].includes(path)) return json({ error: '找不到此操作。' }, 404);
     try {
-      const body = await readBody(request); limit(request);
+      const body = await readBody(request, env); limit(request);
       if (path === '/api/chat') {
         if (!ROLES[body.role]) throw new DemoError('請選擇頁面提供的角色。');
         if (!Array.isArray(body.messages) || !body.messages.length || body.messages.length > 17) throw new DemoError('對話已達展示長度，請開始新的對話。');
