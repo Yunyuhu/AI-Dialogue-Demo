@@ -113,8 +113,12 @@ function showSummary(text, original) {
     const el = document.createElement(i === 0 && clean.length <= 30 ? 'h2' : 'p'); el.textContent = clean; box.append(el);
   });
   const before = original.length, after = text.replace(/\s/g, '').length;
-  $('ratio-new').style.width = `${Math.min(100, after / before * 100)}%`;
-  $('ratio-text').textContent = `原文 ${before.toLocaleString()} 字 → 整理後約 ${after.toLocaleString()} 字`;
+  const shorter = after < before;
+  $('ratio').querySelector('.ratio-bar').hidden = !shorter;
+  $('ratio-new').style.width = `${after / before * 100}%`;
+  $('ratio-text').textContent = shorter
+    ? `原文 ${before.toLocaleString()} 字 → 整理後約 ${after.toLocaleString()} 字，縮短 ${Math.round((1 - after / before) * 100)}%`
+    : `原文 ${before.toLocaleString()} 字，整理成有標題的短文後約 ${after.toLocaleString()} 字（原文較短時，結構化後可能變長）`;
   $('ratio').hidden = false;
 }
 async function processText() {
