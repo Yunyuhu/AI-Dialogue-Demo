@@ -67,4 +67,4 @@ DEMO_ENV_FILE=/absolute/path/to/.env.local PORT=8766 node dev.mjs
 
 ## 程式碼授權
 
-© 2026 Yunyu Hu。本儲存庫由 Yunyu Hu 持有著作權的原創程式碼依 [Apache License 2.0](LICENSE) 授權。第三方內容與服務適用各自的授權或使用條款。
+© 2026 Yunyu Hu。本儲存庫由 Yunyu Hu 持有著作權的原創程式碼採雙重授權（`Apache-2.0 OR MIT`）。使用時可擇一遵循 [Apache License 2.0](LICENSE) 或 [MIT License](LICENSE-MIT)。第三方內容與服務適用各自的授權或使用條款。
